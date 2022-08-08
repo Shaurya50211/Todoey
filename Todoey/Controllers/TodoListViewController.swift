@@ -6,20 +6,27 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
     
-    var itemArray = ["Find Doggo", "Buy milk", "Destroy Memory"]
+    
+    var itemArray = [Item]().self
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         // Changing the nav bar appearance Start
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         if #available(iOS 15.0, *) {
-            appearance.backgroundColor = .systemCyan
+            appearance.backgroundColor = UIColor(named: "navbar")
         } else {
             appearance.backgroundColor = .systemBlue
         }
@@ -27,6 +34,8 @@ class TodoListViewController: UITableViewController {
         navigationItem.standardAppearance = appearance
         navigationItem.scrollEdgeAppearance = appearance
         // Changing the nav bar appearance End
+        
+        loadItems()
     }
     
     // MARK: - Add new items
@@ -43,8 +52,13 @@ class TodoListViewController: UITableViewController {
             if textField.text == "" {
                 textField.placeholder = "Please enter something..."
             } else if let text = textField.text{
-                self.itemArray.append(text)
-                self.tableView.reloadData()
+                
+                let newItem = Item(context: self.context)
+                newItem.title = text
+                newItem.done = false
+                self.itemArray.append(newItem)
+                
+                self.saveItems()
             }
             
         }
@@ -60,6 +74,28 @@ class TodoListViewController: UITableViewController {
         
     }
     
+    
+    func saveItems() {
+        do {
+            try context.save()
+        } catch {
+            print("Error saving context \(error)")
+        }
+        
+        self.tableView.reloadData()
+    }
+    
+    
+    func loadItems() {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+            
+        } catch {
+            print("Error fetching data from context \(error)")
+        }
+    }
+    
 }
 
 
@@ -73,13 +109,18 @@ extension TodoListViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
+        let item = itemArray[indexPath.row]
+        
         let cell: UITableViewCell = self.tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        if #available(iOS 14.0, *) {
-            
-            var content = cell.defaultContentConfiguration()
-            content.text = itemArray[indexPath.row]
-            cell.contentConfiguration = content
-        }
+        
+        var content = cell.defaultContentConfiguration()
+        content.text = item.title
+        cell.contentConfiguration = content
+        
+        // Ternary Operator ==>
+        // value = condition ? valueIfTrue : valueIfFalse
+        // Remove or add checkmark
+        cell.accessoryType = item.done ? .checkmark : .none
         return cell
     }
 }
@@ -89,14 +130,15 @@ extension TodoListViewController {
 
 extension TodoListViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        print(itemArray[indexPath.row])
         
-        // Remove or add checkmark
-        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        
+//        context.delete(itemArray[indexPath.row])
+//        itemArray.remove(at: indexPath.row)
+        
+        // Sets the done property to the opposite
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
