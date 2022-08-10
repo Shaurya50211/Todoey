@@ -25,11 +25,7 @@ class TodoListViewController: UITableViewController {
         // Changing the nav bar appearance Start
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        if #available(iOS 15.0, *) {
-            appearance.backgroundColor = UIColor(named: "navbar")
-        } else {
-            appearance.backgroundColor = .systemBlue
-        }
+        appearance.backgroundColor = UIColor(named: "navbar")
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         navigationItem.standardAppearance = appearance
         navigationItem.scrollEdgeAppearance = appearance
