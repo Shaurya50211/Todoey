@@ -7,7 +7,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Items-->
+        <!--Todo List View Controller-->
         <scene sceneID="pJM-kb-R8p">
             <objects>
                 <tableViewController id="AxR-FT-4dC" customClass="TodoListViewController" customModule="Todoey" customModuleProvider="target" sceneMemberID="viewController">
@@ -38,7 +38,7 @@
                             <outlet property="delegate" destination="AxR-FT-4dC" id="ExF-Tu-3Sl"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Items" id="clV-po-5q0">
+                    <navigationItem key="navigationItem" id="clV-po-5q0">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="oO3-mg-aeJ">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
@@ -98,6 +98,7 @@
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="QoM-s1-gsU">
                         <rect key="frame" x="0.0" y="44" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>

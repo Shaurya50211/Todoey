@@ -6,16 +6,19 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
     
-    var categories = [Category]()
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    let realm = try! Realm()
+    
+    var categories: Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         loadCategories()
+        
         // Changing the nav bar appearance Start
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
@@ -29,31 +32,39 @@ class CategoryViewController: UITableViewController {
         
     }
     
+    // MARK: - Add Button Pressed
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         
-        let alert = UIAlertController(title: "Add new Category", message: "", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Add a new Category", message: "", preferredStyle: .alert)
+        let cancel = UIAlertAction(title: "Cancel", style: .destructive) { (cancel) in
+            alert.dismiss(animated: true, completion: nil)
+        }
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             
-            let newCategory = Category(context: self.context)
-            newCategory.name = textField.text
+            if textField.text != "" {
+            let newCategory = Category()
+            newCategory.name = textField.text!
             
-            self.categories.append(newCategory)
-            
-            self.saveCategories()
+            self.save(category: newCategory)
+            } else {
+                alert.dismiss(animated: true, completion: nil)
+            }
         }
+        
         alert.addAction(action)
+        alert.addAction(cancel)
         
         alert.addTextField { field in
             textField = field
-            textField.placeholder = "Add a new category"
+            textField.placeholder = "Eg. Work"
         }
         present(alert, animated: true, completion: nil)
     }
     
     // MARK: - Table View Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        return categories?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -62,16 +73,33 @@ class CategoryViewController: UITableViewController {
         
         if #available(iOS 14.0, *) {
             var content = cell.defaultContentConfiguration()
-            content.text = categories[indexPath.row].name
+            content.text = categories?[indexPath.row].name ?? "No categories added yet!"
             cell.contentConfiguration = content
         }
         return cell
     }
     
+    // MARK: - Table View Delegate Methods
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVS = segue.destination as! TodoListViewController
+        
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVS.selectedCategory = categories?[indexPath.row]
+        }
+    }
+    
+    
+    
     // Mark: - Data Manipulation Methods
-    func saveCategories() {
+    func save(category: Category) {
         do {
-            try context.save()
+            try realm.write{
+                realm.add(category)
+            }
         } catch {
             print("Error saving category: \(error)")
         }
@@ -79,18 +107,9 @@ class CategoryViewController: UITableViewController {
     }
     
     func loadCategories() {
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
         
-        do {
-            categories = try context.fetch(request)
-        } catch {
-            print("Error coudn't fetch from context: \(error)")
-        }
+        categories = realm.objects(Category.self)
+        
         tableView.reloadData()
     }
-    
-    
-    
-    // MARK: - Table View Delegate Methods
-    
 }
